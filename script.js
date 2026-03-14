@@ -3,7 +3,7 @@
 // ── STATE ──
 let state = {
   user: null,
-  users: [{email:'manager@digistock.com', pass:'password123', name:'Priya Sharma', role:'Store Manager'}],
+  users: [{email:'manager@digistock.com', pass:'password123', name:'Rushi Bhatt', role:'Store Manager'}],
   products: [
     // ── MEN'S WEAR ──
     {id:1,  name:"Men's Cotton T-Shirt (S)",    sku:'MTS-001', cat:"Men's Wear",   unit:'pcs',  stock:120, min:20, loc:'Floor A - Men'},
