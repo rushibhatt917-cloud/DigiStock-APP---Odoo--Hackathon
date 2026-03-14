@@ -4,7 +4,7 @@
 ---
 
 ## 🔗 Live Demo
-👉 **[https://rushibhatt917-cloud.github.io/Core-Inventory--Odoo/](https://rushibhatt917-cloud.github.io/Core-Inventory--Odoo/)**
+👉 **[https://rushibhatt917-cloud.github.io/Core-Inventory--Odoo/]( https://rushibhatt917-cloud.github.io/DigiStock-APP---Odoo--Hackathon/)**
 
 **Login Credentials:**
 - Email: `manager@onestitch.com`
