@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DigiStock</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ALERT -->
+<div class="alert-banner" id="alert"></div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">Digi<span>Stock</span></div>
+    <div class="auth-sub">Clothing store inventory, simplified.</div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+      <button class="tab-btn" onclick="switchTab('otp')">Reset</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="field"><label>Email</label><input type="email" id="li-email" placeholder="manager@digistock.com" value="manager@digistock.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••" value="password123"/></div>
+      <button class="btn-primary" onclick="doLogin()">Login →</button>
+      <div class="otp-link">Forgot password? <a onclick="switchTab('otp')">Reset via OTP</a></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="tab-signup" style="display:none">
+      <div class="field"><label>Full Name</label><input type="text" id="su-name" placeholder="Ravi Kumar"/></div>
+      <div class="field"><label>Email</label><input type="email" id="su-email" placeholder="ravi@company.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="su-pass" placeholder="Min 6 characters"/></div>
+      <div class="field"><label>Role</label>
+        <select id="su-role">
+          <option>Store Manager</option>
+          <option>Floor Staff</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doSignup()">Create Account →</button>
+    </div>
+
+    <!-- OTP RESET -->
+    <div id="tab-otp" style="display:none">
+      <div class="field"><label>Registered Email</label><input type="email" id="otp-email" placeholder="your@email.com"/></div>
+      <div id="otp-step2" style="display:none">
+        <div class="field"><label>Enter OTP</label>
+          <div class="otp-grid">
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,1)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,2)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,3)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,4)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,5)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,6)"/>
+          </div>
+        </div>
+        <div class="field"><label>New Password</label><input type="password" id="otp-newpass" placeholder="New password"/></div>
+      </div>
+      <button class="btn-primary" id="otp-btn" onclick="doOtp()">Send OTP →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">Digi<span>Stock</span></div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="goto('dashboard')"><span class="icon">▦</span> Dashboard</div>
+      <div class="nav-section">Products</div>
+      <div class="nav-item" onclick="goto('products')"><span class="icon">◈</span> Products</div>
+      <div class="nav-section">Operations</div>
+      <div class="nav-item" onclick="goto('receipts')"><span class="icon">↓</span> Receipts</div>
+      <div class="nav-item" onclick="goto('deliveries')"><span class="icon">↑</span> Deliveries</div>
+      <div class="nav-item" onclick="goto('transfers')"><span class="icon">⇄</span> Transfers</div>
+      <div class="nav-item" onclick="goto('adjustments')"><span class="icon">⊛</span> Adjustments</div>
+      <div class="nav-section">History</div>
+      <div class="nav-item" onclick="goto('ledger')"><span class="icon">≡</span> Stock Ledger</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="sidebar-avatar">M</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">Manager</div>
+          <div class="user-role" id="sidebar-role">Store Manager</div>
+        </div>
+      </div>
+      <div class="logout-btn" onclick="doLogout()">⎋ Logout</div>
+      <div class="db-btns">
+        <div class="db-btn" onclick="dbExport()">⬇ Export DB</div>
+        <div class="db-btn reset" onclick="dbReset()">↺ Reset</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Real-time inventory snapshot — DigiStock</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Total Products</div><div class="kpi-value accent" id="kpi-total">0</div><div class="kpi-sub">in stock</div></div>
+        <div class="kpi-card"><div class="kpi-label">Low / Out of Stock</div><div class="kpi-value danger" id="kpi-low">0</div><div class="kpi-sub">need attention</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pending Receipts</div><div class="kpi-value warn" id="kpi-receipts">0</div><div class="kpi-sub">incoming</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pending Deliveries</div><div class="kpi-value warn" id="kpi-deliveries">0</div><div class="kpi-sub">outgoing</div></div>
+        <div class="kpi-card"><div class="kpi-label">Transfers</div><div class="kpi-value green" id="kpi-transfers">0</div><div class="kpi-sub">scheduled</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Activity</span></div>
+          <div id="dash-ledger"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Low Stock Alerts</span></div>
+          <div id="dash-lowstock"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Products</div><div class="page-sub">Manage your clothing inventory</div></div>
+        <button class="btn-sm accent" onclick="openModal('product')">+ Add Product</button>
+      </div>
+      <div class="filter-row">
+        <input class="search-input" id="prod-search" placeholder="🔍  Search by name or SKU…" oninput="renderProducts()"/>
+        <select class="filter-select" id="prod-cat" onchange="renderProducts()">
+          <option value="">All Categories</option>
+          <option>Men's Wear</option><option>Women's Wear</option><option>Kids' Wear</option>
+          <option>Winter Wear</option><option>Ethnic Wear</option><option>Innerwear</option>
+          <option>Accessories</option><option>Footwear</option>
+        </select>
+        <select class="filter-select" id="prod-loc" onchange="renderProducts()">
+          <option value="">All Locations</option>
+          <option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option>
+          <option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option>
+          <option>Accessories Rack</option><option>Footwear Section</option>
+        </select>
+        <select class="filter-select" id="prod-stock" onchange="renderProducts()">
+          <option value="">All Stock Levels</option>
+          <option value="low">Low / Out of Stock</option>
+          <option value="ok">Healthy Stock</option>
+        </select>
+      </div>
+      <div id="prod-count" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+
+    <!-- RECEIPTS -->
+    <div class="page" id="page-receipts">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Receipts</div><div class="page-sub">Incoming stock from vendors</div></div>
+        <button class="btn-sm accent" onclick="openModal('receipt')">+ New Receipt</button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" onchange="renderOps('receipts',this.value)">
+          <option value="">All Status</option><option>Draft</option><option>Done</option>
+        </select>
+      </div>
+      <div class="card"><table><thead><tr><th>Receipt #</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="receipts-tbody"></tbody></table></div>
+    </div>
+
+    <!-- DELIVERIES -->
+    <div class="page" id="page-deliveries">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Delivery Orders</div><div class="page-sub">Outgoing stock to customers</div></div>
+        <button class="btn-sm accent" onclick="openModal('delivery')">+ New Delivery</button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" onchange="renderOps('deliveries',this.value)">
+          <option value="">All Status</option><option>Draft</option><option>Done</option>
+        </select>
+      </div>
+      <div class="card"><table><thead><tr><th>Delivery #</th><th>Customer</th><th>Product</th><th>Qty</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="deliveries-tbody"></tbody></table></div>
+    </div>
+
+    <!-- TRANSFERS -->
+    <div class="page" id="page-transfers">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Internal Transfers</div><div class="page-sub">Move stock between store sections</div></div>
+        <button class="btn-sm accent" onclick="openModal('transfer')">+ New Transfer</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Transfer #</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="transfers-tbody"></tbody></table></div>
+    </div>
+
+    <!-- ADJUSTMENTS -->
+    <div class="page" id="page-adjustments">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Stock Adjustments</div><div class="page-sub">Fix stock count mismatches</div></div>
+        <button class="btn-sm accent" onclick="openModal('adjustment')">+ New Adjustment</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Adj #</th><th>Product</th><th>Old Qty</th><th>New Qty</th><th>Difference</th><th>Reason</th><th>Date</th></tr></thead><tbody id="adjustments-tbody"></tbody></table></div>
+    </div>
+
+    <!-- LEDGER -->
+    <div class="page" id="page-ledger">
+      <div class="page-header"><div class="page-title">Stock Ledger</div><div class="page-sub">Complete audit trail of all movements</div></div>
+      <div class="card"><div id="full-ledger"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+
+  <!-- ADD PRODUCT -->
+  <div class="modal" id="modal-product" style="display:none">
+    <div class="modal-head"><span class="modal-title">Add Product</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Product Name</label><input id="p-name" placeholder="e.g. Men's Polo Shirt (M)"/></div>
+        <div class="field"><label>SKU / Code</label><input id="p-sku" placeholder="e.g. MPL-001"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Category</label>
+          <select id="p-cat">
+            <option>Men's Wear</option><option>Women's Wear</option><option>Kids' Wear</option>
+            <option>Winter Wear</option><option>Ethnic Wear</option><option>Innerwear</option>
+            <option>Accessories</option><option>Footwear</option>
+          </select>
+        </div>
+        <div class="field"><label>Unit</label>
+          <select id="p-unit">
+            <option>pcs</option><option>packs</option><option>pairs</option>
+            <option>sets</option><option>rolls</option><option>boxes</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Initial Stock</label><input id="p-stock" type="number" placeholder="0"/></div>
+        <div class="field"><label>Low Stock Alert (min)</label><input id="p-min" type="number" placeholder="10"/></div>
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <select id="p-loc">
+          <option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option>
+          <option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option>
+          <option>Accessories Rack</option><option>Footwear Section</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm accent" onclick="addProduct()">Add Product</button></div>
+  </div>
+
+  <!-- RECEIPT -->
+  <div class="modal" id="modal-receipt" style="display:none">
+    <div class="modal-head"><span class="modal-title">New Receipt</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Supplier Name</label><input id="r-supplier" placeholder="e.g. Fab India Textiles"/></div>
+      <div class="form-row">
+        <div class="field"><label>Product</label><select id="r-product"></select></div>
+        <div class="field"><label>Quantity Received</label><input id="r-qty" type="number" placeholder="0"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm" onclick="saveOp('receipt','Draft')">Save Draft</button>
+      <button class="btn-sm accent" onclick="saveOp('receipt','Done')">Validate ✓</button>
+    </div>
+  </div>
+
+  <!-- DELIVERY -->
+  <div class="modal" id="modal-delivery" style="display:none">
+    <div class="modal-head"><span class="modal-title">New Delivery Order</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Customer Name</label><input id="d-customer" placeholder="e.g. Style Hub Retail"/></div>
+      <div class="form-row">
+        <div class="field"><label>Product</label><select id="d-product"></select></div>
+        <div class="field"><label>Quantity to Send</label><input id="d-qty" type="number" placeholder="0"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm" onclick="saveOp('delivery','Draft')">Save Draft</button>
+      <button class="btn-sm accent" onclick="saveOp('delivery','Done')">Validate ✓</button>
+    </div>
+  </div>
+
+  <!-- TRANSFER -->
+  <div class="modal" id="modal-transfer" style="display:none">
+    <div class="modal-head"><span class="modal-title">Internal Transfer</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Product</label><select id="t-product"></select></div>
+        <div class="field"><label>Quantity</label><input id="t-qty" type="number" placeholder="0"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>From Location</label>
+          <select id="t-from">
+            <option>Store Room 1</option><option>Store Room 2</option><option>Floor A - Men</option>
+            <option>Floor B - Women</option><option>Floor C - Kids</option><option>Floor D - Ethnic</option>
+            <option>Accessories Rack</option><option>Footwear Section</option>
+          </select>
+        </div>
+        <div class="field"><label>To Location</label>
+          <select id="t-to">
+            <option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option>
+            <option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option>
+            <option>Accessories Rack</option><option>Footwear Section</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm" onclick="saveOp('transfer','Draft')">Save Draft</button>
+      <button class="btn-sm accent" onclick="saveOp('transfer','Done')">Validate ✓</button>
+    </div>
+  </div>
+
+  <!-- ADJUSTMENT -->
+  <div class="modal" id="modal-adjustment" style="display:none">
+    <div class="modal-head"><span class="modal-title">Stock Adjustment</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Product</label><select id="adj-product" onchange="fillOldQty()"></select></div>
+      <div class="form-row">
+        <div class="field"><label>Current (Recorded) Qty</label><input id="adj-old" type="number" readonly style="opacity:.6"/></div>
+        <div class="field"><label>Actual (Physical Count)</label><input id="adj-new" type="number" placeholder="0" oninput="calcDiff()"/></div>
+      </div>
+      <div class="field"><label>Difference</label><input id="adj-diff" type="text" readonly style="font-weight:700;opacity:.8"/></div>
+      <div class="field"><label>Reason</label>
+        <select id="adj-reason">
+          <option>Damaged goods</option><option>Theft/Loss</option>
+          <option>Counting error</option><option>Expiry</option><option>Found extra stock</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm accent" onclick="saveOp('adjustment','Done')">Apply Adjustment</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
