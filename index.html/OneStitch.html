@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OneStitch</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #222535;
+  --border: #2e3248;
+  --accent: #6c63ff;
+  --accent2: #00d4aa;
+  --danger: #ff5c5c;
+  --warn: #ffb347;
+  --text: #e8eaf6;
+  --muted: #7b7f9e;
+  --green: #00d4aa;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 30% 20%,#1e1b4b 0%,#0f1117 60%);}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,.5);}
+.auth-logo{font-family:var(--mono);font-size:22px;color:var(--accent);margin-bottom:6px;letter-spacing:-1px;}
+.auth-logo span{color:var(--accent2);}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:32px;}
+.tab-row{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:4px;margin-bottom:24px;}
+.tab-btn{flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;background:transparent;color:var(--muted);transition:.2s;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:.2s;}
+.field input:focus{border-color:var(--accent);}
+.btn-primary{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
+.btn-primary:hover{background:#7c73ff;transform:translateY(-1px);}
+.otp-link{text-align:center;margin-top:12px;font-size:12px;color:var(--muted);}
+.otp-link a{color:var(--accent);cursor:pointer;text-decoration:none;}
+
+/* ── LAYOUT ── */
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.logo{padding:20px 20px 16px;font-family:var(--mono);font-size:16px;color:var(--accent);border-bottom:1px solid var(--border);letter-spacing:-1px;}
+.logo span{color:var(--accent2);}
+.nav{flex:1;padding:12px 8px;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:.15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(108,99,255,.15);color:var(--accent);}
+.nav-item .icon{width:16px;text-align:center;font-size:15px;}
+.nav-section{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--border);padding:12px 12px 4px;font-weight:600;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;}
+.user-chip:hover{background:var(--surface2);}
+.avatar{width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.user-info{flex:1;}
+.user-name{font-size:12px;font-weight:600;}
+.user-role{font-size:10px;color:var(--muted);}
+.logout-btn{font-size:11px;color:var(--danger);cursor:pointer;padding:4px 12px;border-radius:6px;}
+.logout-btn:hover{background:rgba(255,92,92,.1);}
+
+.main{margin-left:220px;padding:28px;min-height:100vh;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{margin-bottom:24px;}
+.page-title{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-0.5px;}
+.page-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+
+/* ── DASHBOARD ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.kpi-value{font-family:var(--mono);font-size:26px;font-weight:700;}
+.kpi-value.green{color:var(--green);}
+.kpi-value.warn{color:var(--warn);}
+.kpi-value.danger{color:var(--danger);}
+.kpi-value.accent{color:var(--accent);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* ── CARDS & TABLES ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.btn-sm{padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);font-family:var(--sans);font-size:12px;cursor:pointer;transition:.15s;}
+.btn-sm:hover{background:var(--surface2);}
+.btn-sm.accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-sm.accent:hover{background:#7c73ff;}
+.btn-sm.danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(46,50,72,.5);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge.green{background:rgba(0,212,170,.15);color:var(--green);}
+.badge.warn{background:rgba(255,179,71,.15);color:var(--warn);}
+.badge.danger{background:rgba(255,92,92,.15);color:var(--danger);}
+.badge.blue{background:rgba(108,99,255,.15);color:var(--accent);}
+.badge.gray{background:rgba(123,127,158,.15);color:var(--muted);}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer;}
+.search-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;width:200px;}
+.search-input:focus{border-color:var(--accent);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{cursor:pointer;color:var(--muted);font-size:18px;line-height:1;}
+.modal-body{padding:24px;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row.full{grid-template-columns:1fr;}
+
+/* ── LEDGER ── */
+.ledger-entry{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(46,50,72,.4);}
+.ledger-entry:last-child{border-bottom:none;}
+.ledger-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.ledger-icon.in{background:rgba(0,212,170,.15);}
+.ledger-icon.out{background:rgba(255,92,92,.15);}
+.ledger-icon.move{background:rgba(108,99,255,.15);}
+.ledger-icon.adj{background:rgba(255,179,71,.15);}
+.ledger-info{flex:1;}
+.ledger-main{font-size:13px;font-weight:500;}
+.ledger-time{font-size:11px;color:var(--muted);}
+.ledger-qty{font-family:var(--mono);font-size:14px;font-weight:700;}
+.ledger-qty.pos{color:var(--green);}
+.ledger-qty.neg{color:var(--danger);}
+
+/* ── ALERT ── */
+.alert-banner{position:fixed;top:16px;right:16px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;z-index:900;transform:translateX(120%);transition:.3s;max-width:280px;}
+.alert-banner.show{transform:translateX(0);}
+.alert-banner.success{border-color:var(--green);}
+.alert-banner.error{border-color:var(--danger);}
+
+/* ── EMPTY ── */
+.empty{padding:40px;text-align:center;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:8px;}
+.empty-text{font-size:13px;}
+
+/* ── PRODUCT GRID ── */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.product-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:.15s;}
+.product-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.product-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.product-sku{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.product-stock{font-family:var(--mono);font-size:22px;font-weight:700;margin:12px 0 4px;}
+.product-cat{font-size:11px;color:var(--muted);}
+.stock-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;}
+.stock-fill{height:100%;border-radius:2px;transition:.3s;}
+
+/* ── OTP ── */
+.otp-grid{display:flex;gap:8px;margin:12px 0;}
+.otp-input{width:44px;height:48px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:20px;outline:none;}
+.otp-input:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- ALERT -->
+<div class="alert-banner" id="alert"></div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">One<span>Stitch</span></div>
+    <div class="auth-sub">Clothing store inventory, simplified.</div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+      <button class="tab-btn" onclick="switchTab('otp')">Reset</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="field"><label>Email</label><input type="email" id="li-email" placeholder="manager@onestitch.com" value="manager@onestitch.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••" value="password123"/></div>
+      <button class="btn-primary" onclick="doLogin()">Login →</button>
+      <div class="otp-link">Forgot password? <a onclick="switchTab('otp')">Reset via OTP</a></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="tab-signup" style="display:none">
+      <div class="field"><label>Full Name</label><input type="text" id="su-name" placeholder="Ravi Kumar"/></div>
+      <div class="field"><label>Email</label><input type="email" id="su-email" placeholder="ravi@company.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="su-pass" placeholder="Min 8 characters"/></div>
+      <div class="field"><label>Role</label>
+        <select id="su-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;">
+          <option>Inventory Manager</option><option>Warehouse Staff</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doSignup()">Create Account →</button>
+    </div>
+
+    <!-- OTP RESET -->
+    <div id="tab-otp" style="display:none">
+      <div class="field"><label>Registered Email</label><input type="email" id="otp-email" placeholder="your@email.com"/></div>
+      <div id="otp-step2" style="display:none">
+        <div class="field"><label>Enter OTP (sent to email)</label>
+          <div class="otp-grid">
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,1)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,2)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,3)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,4)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,5)"/>
+            <input class="otp-input" maxlength="1" oninput="moveOtp(this,6)"/>
+          </div>
+        </div>
+        <div class="field"><label>New Password</label><input type="password" id="otp-newpass" placeholder="New password"/></div>
+      </div>
+      <button class="btn-primary" id="otp-btn" onclick="doOtp()">Send OTP →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">One<span>Stitch</span></div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="goto('dashboard')"><span class="icon">▦</span> Dashboard</div>
+      <div class="nav-section">Products</div>
+      <div class="nav-item" onclick="goto('products')"><span class="icon">◈</span> Products</div>
+      <div class="nav-section">Operations</div>
+      <div class="nav-item" onclick="goto('receipts')"><span class="icon">↓</span> Receipts</div>
+      <div class="nav-item" onclick="goto('deliveries')"><span class="icon">↑</span> Deliveries</div>
+      <div class="nav-item" onclick="goto('transfers')"><span class="icon">⇄</span> Transfers</div>
+      <div class="nav-item" onclick="goto('adjustments')"><span class="icon">⊛</span> Adjustments</div>
+      <div class="nav-section">History</div>
+      <div class="nav-item" onclick="goto('ledger')"><span class="icon">≡</span> Stock Ledger</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="sidebar-avatar">M</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">Manager</div>
+          <div class="user-role" id="sidebar-role">Inventory Manager</div>
+        </div>
+      </div>
+      <div class="logout-btn" onclick="doLogout()">⎋ Logout</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Real-time inventory snapshot</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Total Products</div><div class="kpi-value accent" id="kpi-total">0</div><div class="kpi-sub">in stock</div></div>
+        <div class="kpi-card"><div class="kpi-label">Low / Out of Stock</div><div class="kpi-value danger" id="kpi-low">0</div><div class="kpi-sub">need attention</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pending Receipts</div><div class="kpi-value warn" id="kpi-receipts">0</div><div class="kpi-sub">incoming</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pending Deliveries</div><div class="kpi-value warn" id="kpi-deliveries">0</div><div class="kpi-sub">outgoing</div></div>
+        <div class="kpi-card"><div class="kpi-label">Transfers</div><div class="kpi-value green" id="kpi-transfers">0</div><div class="kpi-sub">scheduled</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Activity</span></div>
+          <div id="dash-ledger"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Low Stock Alerts</span></div>
+          <div id="dash-lowstock"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Products</div><div class="page-sub">Manage your inventory items</div></div>
+        <button class="btn-sm accent" onclick="openModal('product')">+ Add Product</button>
+      </div>
+      <div class="filter-row">
+        <input class="search-input" id="prod-search" placeholder="🔍  Search by name or SKU…" oninput="renderProducts()"/>
+        <select class="filter-select" id="prod-cat" onchange="renderProducts()">
+          <option value="">All Categories</option><option>Men's Wear</option><option>Women's Wear</option><option>Kids' Wear</option><option>Winter Wear</option><option>Ethnic Wear</option><option>Innerwear</option><option>Accessories</option><option>Footwear</option>
+        </select>
+        <select class="filter-select" id="prod-loc" onchange="renderProducts()">
+          <option value="">All Locations</option><option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option><option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option><option>Accessories Rack</option><option>Footwear Section</option>
+        </select>
+        <select class="filter-select" id="prod-stock" onchange="renderProducts()">
+          <option value="">All Stock Levels</option><option value="low">Low / Out of Stock</option><option value="ok">Healthy Stock</option>
+        </select>
+      </div>
+      <div id="prod-count" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+
+    <!-- RECEIPTS -->
+    <div class="page" id="page-receipts">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Receipts</div><div class="page-sub">Incoming stock from vendors</div></div>
+        <button class="btn-sm accent" onclick="openModal('receipt')">+ New Receipt</button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" onchange="renderOps('receipts',this.value)"><option value="">All Status</option><option>Draft</option><option>Done</option></select>
+      </div>
+      <div class="card"><table><thead><tr><th>Receipt #</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="receipts-tbody"></tbody></table></div>
+    </div>
+
+    <!-- DELIVERIES -->
+    <div class="page" id="page-deliveries">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Delivery Orders</div><div class="page-sub">Outgoing stock to customers</div></div>
+        <button class="btn-sm accent" onclick="openModal('delivery')">+ New Delivery</button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" onchange="renderOps('deliveries',this.value)"><option value="">All Status</option><option>Draft</option><option>Done</option></select>
+      </div>
+      <div class="card"><table><thead><tr><th>Delivery #</th><th>Customer</th><th>Product</th><th>Qty</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="deliveries-tbody"></tbody></table></div>
+    </div>
+
+    <!-- TRANSFERS -->
+    <div class="page" id="page-transfers">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Internal Transfers</div><div class="page-sub">Move stock between locations</div></div>
+        <button class="btn-sm accent" onclick="openModal('transfer')">+ New Transfer</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Transfer #</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="transfers-tbody"></tbody></table></div>
+    </div>
+
+    <!-- ADJUSTMENTS -->
+    <div class="page" id="page-adjustments">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="page-title">Stock Adjustments</div><div class="page-sub">Fix stock count mismatches</div></div>
+        <button class="btn-sm accent" onclick="openModal('adjustment')">+ New Adjustment</button>
+      </div>
+      <div class="card"><table><thead><tr><th>Adj #</th><th>Product</th><th>Old Qty</th><th>New Qty</th><th>Difference</th><th>Reason</th><th>Date</th></tr></thead><tbody id="adjustments-tbody"></tbody></table></div>
+    </div>
+
+    <!-- LEDGER -->
+    <div class="page" id="page-ledger">
+      <div class="page-header"><div class="page-title">Stock Ledger</div><div class="page-sub">Complete audit trail of all movements</div></div>
+      <div class="card"><div id="full-ledger"></div></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <!-- ADD PRODUCT -->
+  <div class="modal" id="modal-product" style="display:none">
+    <div class="modal-head"><span class="modal-title">Add Product</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="field"><label>Product Name</label><input id="p-name" placeholder="e.g. Steel Rods"/></div><div class="field"><label>SKU / Code</label><input id="p-sku" placeholder="e.g. STL-001"/></div></div>
+      <div class="form-row"><div class="field"><label>Category</label><select id="p-cat" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>Men's Wear</option><option>Women's Wear</option><option>Kids' Wear</option><option>Winter Wear</option><option>Ethnic Wear</option><option>Innerwear</option><option>Accessories</option><option>Footwear</option></select></div><div class="field"><label>Unit</label><select id="p-unit" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>pcs</option><option>packs</option><option>pairs</option><option>sets</option><option>rolls</option><option>boxes</option></select></div></div>
+      <div class="form-row"><div class="field"><label>Initial Stock</label><input id="p-stock" type="number" placeholder="0"/></div><div class="field"><label>Low Stock Alert (min)</label><input id="p-min" type="number" placeholder="10"/></div></div>
+      <div class="field form-row full"><label>Location</label><select id="p-loc" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option><option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option><option>Accessories Rack</option><option>Footwear Section</option></select></div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm accent" onclick="addProduct()">Add Product</button></div>
+  </div>
+
+  <!-- RECEIPT -->
+  <div class="modal" id="modal-receipt" style="display:none">
+    <div class="modal-head"><span class="modal-title">New Receipt</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Supplier Name</label><input id="r-supplier" placeholder="e.g. Tata Steel Ltd"/></div>
+      <div class="form-row"><div class="field"><label>Product</label><select id="r-product" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"></select></div><div class="field"><label>Quantity Received</label><input id="r-qty" type="number" placeholder="0"/></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm" onclick="saveOp('receipt','Draft')">Save Draft</button><button class="btn-sm accent" onclick="saveOp('receipt','Done')">Validate ✓</button></div>
+  </div>
+
+  <!-- DELIVERY -->
+  <div class="modal" id="modal-delivery" style="display:none">
+    <div class="modal-head"><span class="modal-title">New Delivery Order</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Customer Name</label><input id="d-customer" placeholder="e.g. Buildmart India"/></div>
+      <div class="form-row"><div class="field"><label>Product</label><select id="d-product" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"></select></div><div class="field"><label>Quantity to Send</label><input id="d-qty" type="number" placeholder="0"/></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm" onclick="saveOp('delivery','Draft')">Save Draft</button><button class="btn-sm accent" onclick="saveOp('delivery','Done')">Validate ✓</button></div>
+  </div>
+
+  <!-- TRANSFER -->
+  <div class="modal" id="modal-transfer" style="display:none">
+    <div class="modal-head"><span class="modal-title">Internal Transfer</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="field"><label>Product</label><select id="t-product" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"></select></div><div class="field"><label>Quantity</label><input id="t-qty" type="number" placeholder="0"/></div></div>
+      <div class="form-row">
+        <div class="field"><label>From Location</label><select id="t-from" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>Store Room 1</option><option>Store Room 2</option><option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option><option>Floor D - Ethnic</option><option>Accessories Rack</option><option>Footwear Section</option></select></div>
+        <div class="field"><label>To Location</label><select id="t-to" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>Floor A - Men</option><option>Floor B - Women</option><option>Floor C - Kids</option><option>Floor D - Ethnic</option><option>Store Room 1</option><option>Store Room 2</option><option>Accessories Rack</option><option>Footwear Section</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm" onclick="saveOp('transfer','Draft')">Save Draft</button><button class="btn-sm accent" onclick="saveOp('transfer','Done')">Validate ✓</button></div>
+  </div>
+
+  <!-- ADJUSTMENT -->
+  <div class="modal" id="modal-adjustment" style="display:none">
+    <div class="modal-head"><span class="modal-title">Stock Adjustment</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="field"><label>Product</label><select id="adj-product" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;" onchange="fillOldQty()"></select></div>
+      <div class="form-row"><div class="field"><label>Current (Recorded) Qty</label><input id="adj-old" type="number" readonly style="opacity:.6"/></div><div class="field"><label>Actual (Physical Count)</label><input id="adj-new" type="number" placeholder="0" oninput="calcDiff()"/></div></div>
+      <div class="field"><label>Difference</label><input id="adj-diff" type="text" readonly style="font-family:var(--mono);font-weight:700;opacity:.8"/></div>
+      <div class="field"><label>Reason</label><select id="adj-reason" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"><option>Damaged goods</option><option>Theft/Loss</option><option>Counting error</option><option>Expiry</option><option>Found extra stock</option></select></div>
+    </div>
+    <div class="modal-foot"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm accent" onclick="saveOp('adjustment','Done')">Apply Adjustment</button></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let state = {
+  user: null,
+  users: [{email:'manager@onestitch.com',pass:'password123',name:'Priya Sharma',role:'Store Manager'}],
+  products: [
+    // ── MEN'S WEAR ──
+    {id:1,  name:"Men's Cotton T-Shirt (S)",   sku:'MTS-001',cat:"Men's Wear",  unit:'pcs', stock:120, min:20, loc:'Floor A - Men'},
+    {id:2,  name:"Men's Cotton T-Shirt (M)",   sku:'MTS-002',cat:"Men's Wear",  unit:'pcs', stock:95,  min:20, loc:'Floor A - Men'},
+    {id:3,  name:"Men's Cotton T-Shirt (L)",   sku:'MTS-003',cat:"Men's Wear",  unit:'pcs', stock:4,   min:20, loc:'Floor A - Men'},
+    {id:4,  name:"Men's Cotton T-Shirt (XL)",  sku:'MTS-004',cat:"Men's Wear",  unit:'pcs', stock:60,  min:15, loc:'Floor A - Men'},
+    {id:5,  name:"Men's Polo Shirt (S)",       sku:'MPL-005',cat:"Men's Wear",  unit:'pcs', stock:0,   min:10, loc:'Floor A - Men'},
+    {id:6,  name:"Men's Polo Shirt (M)",       sku:'MPL-006',cat:"Men's Wear",  unit:'pcs', stock:45,  min:10, loc:'Floor A - Men'},
+    {id:7,  name:"Men's Polo Shirt (L)",       sku:'MPL-007',cat:"Men's Wear",  unit:'pcs', stock:38,  min:10, loc:'Floor A - Men'},
+    {id:8,  name:"Men's Slim Jeans (30W)",     sku:'MJN-008',cat:"Men's Wear",  unit:'pcs', stock:55,  min:10, loc:'Floor A - Men'},
+    {id:9,  name:"Men's Slim Jeans (32W)",     sku:'MJN-009',cat:"Men's Wear",  unit:'pcs', stock:48,  min:10, loc:'Floor A - Men'},
+    {id:10, name:"Men's Slim Jeans (34W)",     sku:'MJN-010',cat:"Men's Wear",  unit:'pcs', stock:3,   min:10, loc:'Floor A - Men'},
+    {id:11, name:"Men's Slim Jeans (36W)",     sku:'MJN-011',cat:"Men's Wear",  unit:'pcs', stock:22,  min:8,  loc:'Floor A - Men'},
+    {id:12, name:"Men's Casual Chinos (30W)",  sku:'MCH-012',cat:"Men's Wear",  unit:'pcs', stock:30,  min:8,  loc:'Floor A - Men'},
+    {id:13, name:"Men's Casual Chinos (32W)",  sku:'MCH-013',cat:"Men's Wear",  unit:'pcs', stock:25,  min:8,  loc:'Floor A - Men'},
+    {id:14, name:"Men's Formal Shirt (S)",     sku:'MFS-014',cat:"Men's Wear",  unit:'pcs', stock:40,  min:10, loc:'Floor A - Men'},
+    {id:15, name:"Men's Formal Shirt (M)",     sku:'MFS-015',cat:"Men's Wear",  unit:'pcs', stock:35,  min:10, loc:'Floor A - Men'},
+    {id:16, name:"Men's Formal Shirt (L)",     sku:'MFS-016',cat:"Men's Wear",  unit:'pcs', stock:0,   min:10, loc:'Floor A - Men'},
+    {id:17, name:"Men's Formal Shirt (XL)",    sku:'MFS-017',cat:"Men's Wear",  unit:'pcs', stock:18,  min:8,  loc:'Floor A - Men'},
+    {id:18, name:"Men's Blazer (M)",           sku:'MBZ-018',cat:"Men's Wear",  unit:'pcs', stock:12,  min:4,  loc:'Floor A - Men'},
+    {id:19, name:"Men's Blazer (L)",           sku:'MBZ-019',cat:"Men's Wear",  unit:'pcs', stock:8,   min:4,  loc:'Floor A - Men'},
+    {id:20, name:"Men's Blazer (XL)",          sku:'MBZ-020',cat:"Men's Wear",  unit:'pcs', stock:5,   min:3,  loc:'Floor A - Men'},
+    {id:21, name:"Men's Track Pants (M)",      sku:'MTP-021',cat:"Men's Wear",  unit:'pcs', stock:65,  min:15, loc:'Floor A - Men'},
+    {id:22, name:"Men's Track Pants (L)",      sku:'MTP-022',cat:"Men's Wear",  unit:'pcs', stock:50,  min:15, loc:'Floor A - Men'},
+    {id:23, name:"Men's Hoodie (M)",           sku:'MHD-023',cat:"Men's Wear",  unit:'pcs', stock:2,   min:8,  loc:'Floor A - Men'},
+    {id:24, name:"Men's Hoodie (L)",           sku:'MHD-024',cat:"Men's Wear",  unit:'pcs', stock:20,  min:8,  loc:'Floor A - Men'},
+    {id:25, name:"Men's Kurta (M)",            sku:'MKT-025',cat:"Men's Wear",  unit:'pcs', stock:35,  min:10, loc:'Floor A - Men'},
+
+    // ── WOMEN'S WEAR ──
+    {id:26, name:"Women's Kurti (S)",          sku:'WKT-026',cat:"Women's Wear",unit:'pcs', stock:80,  min:15, loc:'Floor B - Women'},
+    {id:27, name:"Women's Kurti (M)",          sku:'WKT-027',cat:"Women's Wear",unit:'pcs', stock:95,  min:15, loc:'Floor B - Women'},
+    {id:28, name:"Women's Kurti (L)",          sku:'WKT-028',cat:"Women's Wear",unit:'pcs', stock:4,   min:15, loc:'Floor B - Women'},
+    {id:29, name:"Women's Kurti (XL)",         sku:'WKT-029',cat:"Women's Wear",unit:'pcs', stock:40,  min:10, loc:'Floor B - Women'},
+    {id:30, name:"Women's Salwar Suit (S)",    sku:'WSS-030',cat:"Women's Wear",unit:'pcs', stock:28,  min:8,  loc:'Floor B - Women'},
+    {id:31, name:"Women's Salwar Suit (M)",    sku:'WSS-031',cat:"Women's Wear",unit:'pcs', stock:35,  min:8,  loc:'Floor B - Women'},
+    {id:32, name:"Women's Salwar Suit (L)",    sku:'WSS-032',cat:"Women's Wear",unit:'pcs', stock:0,   min:8,  loc:'Floor B - Women'},
+    {id:33, name:"Women's Saree (Cotton)",     sku:'WSR-033',cat:"Women's Wear",unit:'pcs', stock:50,  min:10, loc:'Floor B - Women'},
+    {id:34, name:"Women's Saree (Silk)",       sku:'WSR-034',cat:"Women's Wear",unit:'pcs', stock:22,  min:5,  loc:'Floor B - Women'},
+    {id:35, name:"Women's Saree (Chiffon)",    sku:'WSR-035',cat:"Women's Wear",unit:'pcs', stock:15,  min:5,  loc:'Floor B - Women'},
+    {id:36, name:"Women's Leggings (S)",       sku:'WLG-036',cat:"Women's Wear",unit:'pcs', stock:100, min:20, loc:'Floor B - Women'},
+    {id:37, name:"Women's Leggings (M)",       sku:'WLG-037',cat:"Women's Wear",unit:'pcs', stock:85,  min:20, loc:'Floor B - Women'},
+    {id:38, name:"Women's Leggings (L)",       sku:'WLG-038',cat:"Women's Wear",unit:'pcs', stock:3,   min:20, loc:'Floor B - Women'},
+    {id:39, name:"Women's Palazzo (M)",        sku:'WPZ-039',cat:"Women's Wear",unit:'pcs', stock:40,  min:10, loc:'Floor B - Women'},
+    {id:40, name:"Women's Palazzo (L)",        sku:'WPZ-040',cat:"Women's Wear",unit:'pcs', stock:30,  min:10, loc:'Floor B - Women'},
+    {id:41, name:"Women's Tops - Casual (S)",  sku:'WTP-041',cat:"Women's Wear",unit:'pcs', stock:55,  min:12, loc:'Floor B - Women'},
+    {id:42, name:"Women's Tops - Casual (M)",  sku:'WTP-042',cat:"Women's Wear",unit:'pcs', stock:60,  min:12, loc:'Floor B - Women'},
+    {id:43, name:"Women's Tops - Casual (L)",  sku:'WTP-043',cat:"Women's Wear",unit:'pcs', stock:45,  min:12, loc:'Floor B - Women'},
+    {id:44, name:"Women's Anarkali (M)",       sku:'WAN-044',cat:"Women's Wear",unit:'pcs', stock:18,  min:5,  loc:'Floor B - Women'},
+    {id:45, name:"Women's Anarkali (L)",       sku:'WAN-045',cat:"Women's Wear",unit:'pcs', stock:12,  min:5,  loc:'Floor B - Women'},
+    {id:46, name:"Women's Skirt (S)",          sku:'WSK-046',cat:"Women's Wear",unit:'pcs', stock:25,  min:8,  loc:'Floor B - Women'},
+    {id:47, name:"Women's Skirt (M)",          sku:'WSK-047',cat:"Women's Wear",unit:'pcs', stock:20,  min:8,  loc:'Floor B - Women'},
+    {id:48, name:"Women's Dupatta (Cotton)",   sku:'WDP-048',cat:"Women's Wear",unit:'pcs', stock:70,  min:15, loc:'Floor B - Women'},
+    {id:49, name:"Women's Dupatta (Silk)",     sku:'WDP-049',cat:"Women's Wear",unit:'pcs', stock:30,  min:10, loc:'Floor B - Women'},
+    {id:50, name:"Women's Blouse (S)",         sku:'WBL-050',cat:"Women's Wear",unit:'pcs', stock:40,  min:10, loc:'Floor B - Women'},
+
+    // ── KIDS' WEAR ──
+    {id:51, name:"Kids' T-Shirt (2-4Y)",       sku:'KTS-051',cat:"Kids' Wear",  unit:'pcs', stock:90,  min:15, loc:'Floor C - Kids'},
+    {id:52, name:"Kids' T-Shirt (4-6Y)",       sku:'KTS-052',cat:"Kids' Wear",  unit:'pcs', stock:85,  min:15, loc:'Floor C - Kids'},
+    {id:53, name:"Kids' T-Shirt (6-8Y)",       sku:'KTS-053',cat:"Kids' Wear",  unit:'pcs', stock:0,   min:15, loc:'Floor C - Kids'},
+    {id:54, name:"Kids' T-Shirt (8-10Y)",      sku:'KTS-054',cat:"Kids' Wear",  unit:'pcs', stock:60,  min:12, loc:'Floor C - Kids'},
+    {id:55, name:"Kids' Frock (2-4Y)",         sku:'KFR-055',cat:"Kids' Wear",  unit:'pcs', stock:45,  min:10, loc:'Floor C - Kids'},
+    {id:56, name:"Kids' Frock (4-6Y)",         sku:'KFR-056',cat:"Kids' Wear",  unit:'pcs', stock:38,  min:10, loc:'Floor C - Kids'},
+    {id:57, name:"Kids' Frock (6-8Y)",         sku:'KFR-057',cat:"Kids' Wear",  unit:'pcs', stock:5,   min:10, loc:'Floor C - Kids'},
+    {id:58, name:"Kids' Jeans (4-6Y)",         sku:'KJN-058',cat:"Kids' Wear",  unit:'pcs', stock:40,  min:10, loc:'Floor C - Kids'},
+    {id:59, name:"Kids' Jeans (6-8Y)",         sku:'KJN-059',cat:"Kids' Wear",  unit:'pcs', stock:35,  min:10, loc:'Floor C - Kids'},
+    {id:60, name:"Kids' Jeans (8-10Y)",        sku:'KJN-060',cat:"Kids' Wear",  unit:'pcs', stock:28,  min:8,  loc:'Floor C - Kids'},
+    {id:61, name:"Kids' Track Suit (4-6Y)",    sku:'KTS-061',cat:"Kids' Wear",  unit:'pcs', stock:50,  min:10, loc:'Floor C - Kids'},
+    {id:62, name:"Kids' Track Suit (6-8Y)",    sku:'KTS-062',cat:"Kids' Wear",  unit:'pcs', stock:3,   min:10, loc:'Floor C - Kids'},
+    {id:63, name:"Kids' Ethnic Set (2-4Y)",    sku:'KET-063',cat:"Kids' Wear",  unit:'pcs', stock:30,  min:8,  loc:'Floor C - Kids'},
+    {id:64, name:"Kids' Ethnic Set (4-6Y)",    sku:'KET-064',cat:"Kids' Wear",  unit:'pcs', stock:25,  min:8,  loc:'Floor C - Kids'},
+    {id:65, name:"Kids' School Uniform Shirt", sku:'KSU-065',cat:"Kids' Wear",  unit:'pcs', stock:120, min:20, loc:'Floor C - Kids'},
+
+    // ── WINTER WEAR ──
+    {id:66, name:"Men's Woollen Sweater (M)",  sku:'MWS-066',cat:'Winter Wear', unit:'pcs', stock:35,  min:10, loc:'Store Room 1'},
+    {id:67, name:"Men's Woollen Sweater (L)",  sku:'MWS-067',cat:'Winter Wear', unit:'pcs', stock:28,  min:10, loc:'Store Room 1'},
+    {id:68, name:"Men's Jacket (M)",           sku:'MJK-068',cat:'Winter Wear', unit:'pcs', stock:4,   min:8,  loc:'Store Room 1'},
+    {id:69, name:"Men's Jacket (L)",           sku:'MJK-069',cat:'Winter Wear', unit:'pcs', stock:18,  min:8,  loc:'Store Room 1'},
+    {id:70, name:"Men's Jacket (XL)",          sku:'MJK-070',cat:'Winter Wear', unit:'pcs', stock:12,  min:6,  loc:'Store Room 1'},
+    {id:71, name:"Women's Shawl (Woollen)",    sku:'WSH-071',cat:'Winter Wear', unit:'pcs', stock:50,  min:10, loc:'Store Room 1'},
+    {id:72, name:"Women's Shawl (Pashmina)",   sku:'WSH-072',cat:'Winter Wear', unit:'pcs', stock:15,  min:5,  loc:'Store Room 1'},
+    {id:73, name:"Women's Cardigan (M)",       sku:'WCD-073',cat:'Winter Wear', unit:'pcs', stock:22,  min:8,  loc:'Store Room 1'},
+    {id:74, name:"Women's Cardigan (L)",       sku:'WCD-074',cat:'Winter Wear', unit:'pcs', stock:0,   min:8,  loc:'Store Room 1'},
+    {id:75, name:"Kids' Woollen Jacket (4-6Y)",sku:'KWJ-075',cat:'Winter Wear', unit:'pcs', stock:30,  min:8,  loc:'Store Room 1'},
+    {id:76, name:"Kids' Woollen Jacket (6-8Y)",sku:'KWJ-076',cat:'Winter Wear', unit:'pcs', stock:25,  min:8,  loc:'Store Room 1'},
+    {id:77, name:"Unisex Muffler",             sku:'UMF-077',cat:'Winter Wear', unit:'pcs', stock:80,  min:15, loc:'Store Room 1'},
+    {id:78, name:"Woollen Gloves (Free Size)", sku:'WGL-078',cat:'Winter Wear', unit:'pcs', stock:60,  min:12, loc:'Store Room 1'},
+    {id:79, name:"Thermal Inner (M)",          sku:'THI-079',cat:'Winter Wear', unit:'pcs', stock:3,   min:10, loc:'Store Room 1'},
+    {id:80, name:"Thermal Inner (L)",          sku:'THI-080',cat:'Winter Wear', unit:'pcs', stock:40,  min:10, loc:'Store Room 1'},
+
+    // ── ETHNIC WEAR ──
+    {id:81, name:"Men's Kurta-Pyjama Set (M)", sku:'MKP-081',cat:'Ethnic Wear', unit:'pcs', stock:30,  min:8,  loc:'Floor D - Ethnic'},
+    {id:82, name:"Men's Kurta-Pyjama Set (L)", sku:'MKP-082',cat:'Ethnic Wear', unit:'pcs', stock:25,  min:8,  loc:'Floor D - Ethnic'},
+    {id:83, name:"Men's Sherwani (M)",         sku:'MSW-083',cat:'Ethnic Wear', unit:'pcs', stock:8,   min:3,  loc:'Floor D - Ethnic'},
+    {id:84, name:"Men's Sherwani (L)",         sku:'MSW-084',cat:'Ethnic Wear', unit:'pcs', stock:5,   min:3,  loc:'Floor D - Ethnic'},
+    {id:85, name:"Women's Lehenga (S)",        sku:'WLH-085',cat:'Ethnic Wear', unit:'pcs', stock:12,  min:4,  loc:'Floor D - Ethnic'},
+    {id:86, name:"Women's Lehenga (M)",        sku:'WLH-086',cat:'Ethnic Wear', unit:'pcs', stock:10,  min:4,  loc:'Floor D - Ethnic'},
+    {id:87, name:"Women's Lehenga (L)",        sku:'WLH-087',cat:'Ethnic Wear', unit:'pcs', stock:0,   min:4,  loc:'Floor D - Ethnic'},
+    {id:88, name:"Women's Gharara Set (M)",    sku:'WGS-088',cat:'Ethnic Wear', unit:'pcs', stock:6,   min:3,  loc:'Floor D - Ethnic'},
+    {id:89, name:"Dhoti (Free Size)",          sku:'DHT-089',cat:'Ethnic Wear', unit:'pcs', stock:40,  min:8,  loc:'Floor D - Ethnic'},
+    {id:90, name:"Nehru Jacket (M)",           sku:'NJK-090',cat:'Ethnic Wear', unit:'pcs', stock:18,  min:5,  loc:'Floor D - Ethnic'},
+
+    // ── INNERWEAR & BASICS ──
+    {id:91, name:"Men's Vest (S-Pack of 3)",   sku:'MVT-091',cat:'Innerwear',   unit:'packs',stock:80,  min:15, loc:'Store Room 2'},
+    {id:92, name:"Men's Vest (M-Pack of 3)",   sku:'MVT-092',cat:'Innerwear',   unit:'packs',stock:75,  min:15, loc:'Store Room 2'},
+    {id:93, name:"Men's Vest (L-Pack of 3)",   sku:'MVT-093',cat:'Innerwear',   unit:'packs',stock:4,   min:15, loc:'Store Room 2'},
+    {id:94, name:"Men's Boxers (M)",           sku:'MBX-094',cat:'Innerwear',   unit:'pcs', stock:90,  min:20, loc:'Store Room 2'},
+    {id:95, name:"Men's Boxers (L)",           sku:'MBX-095',cat:'Innerwear',   unit:'pcs', stock:70,  min:20, loc:'Store Room 2'},
+    {id:96, name:"Women's Bra (32B)",          sku:'WBR-096',cat:'Innerwear',   unit:'pcs', stock:50,  min:10, loc:'Store Room 2'},
+    {id:97, name:"Women's Bra (34B)",          sku:'WBR-097',cat:'Innerwear',   unit:'pcs', stock:45,  min:10, loc:'Store Room 2'},
+    {id:98, name:"Women's Bra (36C)",          sku:'WBR-098',cat:'Innerwear',   unit:'pcs', stock:3,   min:10, loc:'Store Room 2'},
+    {id:99, name:"Women's Panties (M-Pack 3)", sku:'WPN-099',cat:'Innerwear',   unit:'packs',stock:60,  min:12, loc:'Store Room 2'},
+    {id:100,name:"Women's Panties (L-Pack 3)", sku:'WPN-100',cat:'Innerwear',   unit:'packs',stock:50,  min:12, loc:'Store Room 2'},
+
+    // ── ACCESSORIES ──
+    {id:101,name:"Cotton Socks (Men, Pk6)",    sku:'ACS-101',cat:'Accessories', unit:'packs',stock:100, min:20, loc:'Accessories Rack'},
+    {id:102,name:"Cotton Socks (Women, Pk6)",  sku:'ACS-102',cat:'Accessories', unit:'packs',stock:80,  min:15, loc:'Accessories Rack'},
+    {id:103,name:"Leather Belt (32 inch)",     sku:'BLT-103',cat:'Accessories', unit:'pcs', stock:25,  min:5,  loc:'Accessories Rack'},
+    {id:104,name:"Leather Belt (34 inch)",     sku:'BLT-104',cat:'Accessories', unit:'pcs', stock:20,  min:5,  loc:'Accessories Rack'},
+    {id:105,name:"Canvas Belt (Free Size)",    sku:'BLT-105',cat:'Accessories', unit:'pcs', stock:0,   min:8,  loc:'Accessories Rack'},
+    {id:106,name:"Neck Tie (Formal)",          sku:'TIE-106',cat:'Accessories', unit:'pcs', stock:30,  min:6,  loc:'Accessories Rack'},
+    {id:107,name:"Bow Tie",                    sku:'TIE-107',cat:'Accessories', unit:'pcs', stock:15,  min:4,  loc:'Accessories Rack'},
+    {id:108,name:"Handkerchief (Pk6)",         sku:'HKF-108',cat:'Accessories', unit:'packs',stock:60,  min:10, loc:'Accessories Rack'},
+    {id:109,name:"Hair Band (Pk12)",           sku:'HBD-109',cat:'Accessories', unit:'packs',stock:45,  min:10, loc:'Accessories Rack'},
+    {id:110,name:"Scrunchies (Pk6)",           sku:'SCR-110',cat:'Accessories', unit:'packs',stock:50,  min:10, loc:'Accessories Rack'},
+    {id:111,name:"Wallet (Men's, Leather)",    sku:'WAL-111',cat:'Accessories', unit:'pcs', stock:18,  min:5,  loc:'Accessories Rack'},
+    {id:112,name:"Wallet (Women's, Fabric)",   sku:'WAL-112',cat:'Accessories', unit:'pcs', stock:12,  min:5,  loc:'Accessories Rack'},
+    {id:113,name:"Stole (Printed)",            sku:'STL-113',cat:'Accessories', unit:'pcs', stock:35,  min:8,  loc:'Accessories Rack'},
+    {id:114,name:"Cap (Baseball, Unisex)",     sku:'CAP-114',cat:'Accessories', unit:'pcs', stock:40,  min:8,  loc:'Accessories Rack'},
+    {id:115,name:"Sunglasses (Unisex)",        sku:'SGL-115',cat:'Accessories', unit:'pcs', stock:22,  min:5,  loc:'Accessories Rack'},
+
+    // ── FOOTWEAR ──
+    {id:116,name:"Men's Casual Shoes (Size 8)",sku:'MCS-116',cat:'Footwear',    unit:'pairs',stock:20,  min:5,  loc:'Footwear Section'},
+    {id:117,name:"Men's Casual Shoes (Size 9)",sku:'MCS-117',cat:'Footwear',    unit:'pairs',stock:15,  min:5,  loc:'Footwear Section'},
+    {id:118,name:"Men's Formal Shoes (Size 8)",sku:'MFS-118',cat:'Footwear',    unit:'pairs',stock:10,  min:3,  loc:'Footwear Section'},
+    {id:119,name:"Women's Heels (Size 5)",     sku:'WHE-119',cat:'Footwear',    unit:'pairs',stock:0,   min:4,  loc:'Footwear Section'},
+    {id:120,name:"Women's Flats (Size 5-7)",   sku:'WFL-120',cat:'Footwear',    unit:'pairs',stock:25,  min:6,  loc:'Footwear Section'},
+  ],
+  receipts:[
+    {id:'REC-001',supplier:'Fab India Textiles',product:"Women's Kurti (M)",qty:50,status:'Done',date:'2026-03-12'},
+    {id:'REC-002',supplier:'Raymond Fabrics',product:"Men's Formal Shirt (M)",qty:30,status:'Draft',date:'2026-03-13'},
+  ],
+  deliveries:[
+    {id:'DEL-001',customer:'Style Hub Retail',product:"Men's Cotton T-Shirt (M)",qty:20,status:'Done',date:'2026-03-11'},
+    {id:'DEL-002',customer:'Trendy Zone',product:"Women's Leggings (M)",qty:15,status:'Draft',date:'2026-03-13'},
+  ],
+  transfers:[
+    {id:'TRF-001',product:"Women's Saree (Cotton)",qty:20,from:'Store Room 1',to:'Floor B - Women',status:'Done',date:'2026-03-12'},
+  ],
+  adjustments:[
+    {id:'ADJ-001',product:"Kids' Frock (6-8Y)",oldQty:8,newQty:5,diff:-3,reason:'Damaged goods',date:'2026-03-11'},
+  ],
+  ledger:[
+    {type:'in', product:"Women's Kurti (M)",qty:50,note:'Receipt from Fab India Textiles',time:'Mar 12, 10:30'},
+    {type:'out',product:"Men's Cotton T-Shirt (M)",qty:20,note:'Delivery to Style Hub Retail',time:'Mar 11, 14:20'},
+    {type:'move',product:"Women's Saree (Cotton)",qty:20,note:'Transfer: Store Room 1 → Floor B - Women',time:'Mar 12, 11:00'},
+    {type:'adj', product:"Kids' Frock (6-8Y)",qty:-3,note:'Adjustment: Damaged goods',time:'Mar 11, 09:00'},
+  ],
+  nextIds:{rec:3,del:3,trf:2,adj:2}
+};
+
+let otpSent = false, generatedOtp = '';
+
+// ── AUTH ──
+function switchTab(t){
+  ['login','signup','otp'].forEach(x=>{document.getElementById('tab-'+x).style.display='none';});
+  document.getElementById('tab-'+t).style.display='block';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.remove('active');if(['login','signup','otp'][i]===t)b.classList.add('active');});
+}
+
+function doLogin(){
+  const e=document.getElementById('li-email').value.trim();
+  const p=document.getElementById('li-pass').value;
+  const u=state.users.find(x=>x.email===e&&x.pass===p);
+  if(!u){showAlert('Invalid email or password','error');return;}
+  state.user=u;
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sidebar-name').textContent=u.name;
+  document.getElementById('sidebar-role').textContent=u.role;
+  document.getElementById('sidebar-avatar').textContent=u.name[0].toUpperCase();
+  refreshAll();
+  showAlert('Welcome back, '+u.name.split(' ')[0]+'!','success');
+}
+
+function doSignup(){
+  const n=document.getElementById('su-name').value.trim();
+  const e=document.getElementById('su-email').value.trim();
+  const p=document.getElementById('su-pass').value;
+  const r=document.getElementById('su-role').value;
+  if(!n||!e||!p){showAlert('Please fill all fields','error');return;}
+  if(state.users.find(x=>x.email===e)){showAlert('Email already registered','error');return;}
+  state.users.push({email:e,pass:p,name:n,role:r});
+  showAlert('Account created! Please login.','success');
+  switchTab('login');
+  document.getElementById('li-email').value=e;
+}
+
+function doOtp(){
+  if(!otpSent){
+    const e=document.getElementById('otp-email').value.trim();
+    if(!e){showAlert('Enter your email','error');return;}
+    if(!state.users.find(x=>x.email===e)){showAlert('Email not found','error');return;}
+    generatedOtp=Math.floor(100000+Math.random()*900000).toString();
+    otpSent=true;
+    document.getElementById('otp-step2').style.display='block';
+    document.getElementById('otp-btn').textContent='Reset Password →';
+    showAlert('OTP: '+generatedOtp+' (demo — shown here)','success');
+  } else {
+    const entered=Array.from(document.querySelectorAll('.otp-input')).map(x=>x.value).join('');
+    if(entered!==generatedOtp){showAlert('Incorrect OTP','error');return;}
+    const np=document.getElementById('otp-newpass').value;
+    if(!np){showAlert('Enter new password','error');return;}
+    const e=document.getElementById('otp-email').value.trim();
+    state.users.find(x=>x.email===e).pass=np;
+    showAlert('Password reset successfully!','success');
+    otpSent=false; document.getElementById('otp-step2').style.display='none';
+    document.getElementById('otp-btn').textContent='Send OTP →';
+    switchTab('login');
+  }
+}
+
+function moveOtp(el,n){if(el.value&&n<6){const inputs=document.querySelectorAll('.otp-input');inputs[n].focus();}}
+
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  state.user=null;
+}
+
+// ── NAVIGATION ──
+function goto(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const idx={dashboard:0,products:1,receipts:3,deliveries:4,transfers:5,adjustments:6,ledger:8};
+  document.querySelectorAll('.nav-item')[idx[page]]?.classList.add('active');
+  if(page==='products')renderProducts();
+  if(page==='receipts')renderOps('receipts');
+  if(page==='deliveries')renderOps('deliveries');
+  if(page==='transfers')renderOps('transfers');
+  if(page==='adjustments')renderOps('adjustments');
+  if(page==='ledger')renderLedger();
+  if(page==='dashboard')refreshAll();
+}
+
+// ── DASHBOARD ──
+function refreshAll(){
+  const low=state.products.filter(p=>p.stock<=p.min).length;
+  const pendR=state.receipts.filter(r=>r.status==='Draft').length;
+  const pendD=state.deliveries.filter(d=>d.status==='Draft').length;
+  const pendT=state.transfers.filter(t=>t.status==='Draft').length;
+  document.getElementById('kpi-total').textContent=state.products.length;
+  document.getElementById('kpi-low').textContent=low;
+  document.getElementById('kpi-receipts').textContent=pendR;
+  document.getElementById('kpi-deliveries').textContent=pendD;
+  document.getElementById('kpi-transfers').textContent=pendT;
+
+  // Recent ledger
+  const dl=document.getElementById('dash-ledger');
+  const icons={in:'📥',out:'📤',move:'🔄',adj:'⚙️'};
+  const sign={in:'+',out:'-',move:'↔',adj:'±'};
+  dl.innerHTML=state.ledger.slice(-5).reverse().map(l=>`
+    <div class="ledger-entry">
+      <div class="ledger-icon ${l.type}">${icons[l.type]}</div>
+      <div class="ledger-info"><div class="ledger-main">${l.product}</div><div class="ledger-time">${l.note} · ${l.time}</div></div>
+      <div class="ledger-qty ${l.qty>0?'pos':'neg'}">${sign[l.type]}${Math.abs(l.qty)}</div>
+    </div>`).join('');
+
+  // Low stock
+  const ls=document.getElementById('dash-lowstock');
+  const lows=state.products.filter(p=>p.stock<=p.min);
+  ls.innerHTML=lows.length?lows.map(p=>`
+    <div class="ledger-entry">
+      <div class="ledger-icon ${p.stock===0?'out':'adj'}">⚠️</div>
+      <div class="ledger-info"><div class="ledger-main">${p.name}</div><div class="ledger-time">${p.sku} · ${p.loc}</div></div>
+      <div class="ledger-qty neg">${p.stock} ${p.unit}</div>
+    </div>`).join(''):`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">All stock levels healthy</div></div>`;
+}
+
+// ── PRODUCTS ──
+function renderProducts(){
+  const search=(document.getElementById('prod-search')||{}).value||'';
+  const cat=(document.getElementById('prod-cat')||{}).value||'';
+  const loc=(document.getElementById('prod-loc')||{}).value||'';
+  const stockF=(document.getElementById('prod-stock')||{}).value||'';
+  let list=state.products;
+  if(search)list=list.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.sku.toLowerCase().includes(search.toLowerCase()));
+  if(cat)list=list.filter(p=>p.cat===cat);
+  if(loc)list=list.filter(p=>p.loc===loc);
+  if(stockF==='low')list=list.filter(p=>p.stock<=p.min);
+  if(stockF==='ok')list=list.filter(p=>p.stock>p.min);
+  const countEl=document.getElementById('prod-count');
+  const lowCount=list.filter(p=>p.stock<=p.min).length;
+  if(countEl)countEl.innerHTML=`Showing <strong style="color:var(--text)">${list.length}</strong> of ${state.products.length} products &nbsp;·&nbsp; <span style="color:var(--danger)">${lowCount} low/out of stock</span>`;
+  const g=document.getElementById('product-grid');
+  g.innerHTML=list.length?list.map(p=>{
+    const pct=Math.min(100,Math.round(p.stock/Math.max(p.stock,p.min*3)*100));
+    const color=p.stock===0?'var(--danger)':p.stock<=p.min?'var(--warn)':'var(--green)';
+    const badge=p.stock===0?'<span class="badge danger">Out</span>':p.stock<=p.min?'<span class="badge warn">Low</span>':'';
+    return`<div class="product-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">${badge}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-sku">${p.sku}</div>
+      <div class="product-stock" style="color:${color}">${p.stock} <span style="font-size:13px;color:var(--muted);font-family:var(--sans);font-weight:400">${p.unit}</span></div>
+      <div class="product-cat">${p.cat} · ${p.loc}</div>
+      <div class="stock-bar"><div class="stock-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;}).join(''):`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📭</div><div class="empty-text">No products found</div></div>`;
+}
+
+// ── OPERATIONS ──
+function renderOps(type,filterStatus=''){
+  const tbody=document.getElementById(type+'-tbody');
+  let list=state[type];
+  if(filterStatus)list=list.filter(o=>o.status===filterStatus);
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">No records found</td></tr>`;return;}
+
+  if(type==='receipts'){
+    tbody.innerHTML=list.map(r=>`<tr><td style="font-family:var(--mono);font-size:12px">${r.id}</td><td>${r.supplier}</td><td>${r.product}</td><td style="font-family:var(--mono)">${r.qty}</td><td><span class="badge ${r.status==='Done'?'green':'warn'}">${r.status}</span></td><td style="color:var(--muted);font-size:12px">${r.date}</td><td>${r.status==='Draft'?`<button class="btn-sm accent" onclick="validateOp('receipts','${r.id}')">Validate</button>`:'-'}</td></tr>`).join('');
+  } else if(type==='deliveries'){
+    tbody.innerHTML=list.map(d=>`<tr><td style="font-family:var(--mono);font-size:12px">${d.id}</td><td>${d.customer}</td><td>${d.product}</td><td style="font-family:var(--mono)">${d.qty}</td><td><span class="badge ${d.status==='Done'?'green':'warn'}">${d.status}</span></td><td style="color:var(--muted);font-size:12px">${d.date}</td><td>${d.status==='Draft'?`<button class="btn-sm accent" onclick="validateOp('deliveries','${d.id}')">Validate</button>`:'-'}</td></tr>`).join('');
+  } else if(type==='transfers'){
+    tbody.innerHTML=list.map(t=>`<tr><td style="font-family:var(--mono);font-size:12px">${t.id}</td><td>${t.product}</td><td style="font-family:var(--mono)">${t.qty}</td><td>${t.from}</td><td>${t.to}</td><td><span class="badge ${t.status==='Done'?'green':'warn'}">${t.status}</span></td><td style="color:var(--muted);font-size:12px">${t.date}</td><td>${t.status==='Draft'?`<button class="btn-sm accent" onclick="validateOp('transfers','${t.id}')">Validate</button>`:'-'}</td></tr>`).join('');
+  } else if(type==='adjustments'){
+    tbody.innerHTML=list.map(a=>`<tr><td style="font-family:var(--mono);font-size:12px">${a.id}</td><td>${a.product}</td><td style="font-family:var(--mono)">${a.oldQty}</td><td style="font-family:var(--mono)">${a.newQty}</td><td style="font-family:var(--mono);color:${a.diff>=0?'var(--green)':'var(--danger)'}">${a.diff>=0?'+':''}${a.diff}</td><td style="color:var(--muted);font-size:12px">${a.reason}</td><td style="color:var(--muted);font-size:12px">${a.date}</td></tr>`).join('');
+  }
+}
+
+function validateOp(type, id){
+  const op=state[type].find(o=>o.id===id);
+  if(!op)return;
+  op.status='Done';
+  const prod=state.products.find(p=>p.name===op.product);
+  const today=new Date().toISOString().split('T')[0];
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const timeStr=`Mar ${new Date().getDate()}, ${now}`;
+
+  if(type==='receipts'&&prod){
+    prod.stock+=parseInt(op.qty);
+    state.ledger.push({type:'in',product:op.product,qty:parseInt(op.qty),note:'Receipt from '+op.supplier,time:timeStr});
+    showAlert('Stock +'+op.qty+' for '+op.product,'success');
+  } else if(type==='deliveries'&&prod){
+    if(prod.stock<op.qty){showAlert('Insufficient stock! Only '+prod.stock+' available','error');op.status='Draft';return;}
+    prod.stock-=parseInt(op.qty);
+    state.ledger.push({type:'out',product:op.product,qty:parseInt(op.qty),note:'Delivery to '+op.customer,time:timeStr});
+    showAlert('Delivery validated. Stock -'+op.qty,'success');
+  } else if(type==='transfers'){
+    state.ledger.push({type:'move',product:op.product,qty:parseInt(op.qty),note:'Transfer: '+op.from+' → '+op.to,time:timeStr});
+    showAlert('Transfer completed','success');
+  }
+  renderOps(type);
+  refreshAll();
+}
+
+// ── MODALS ──
+function openModal(type){
+  document.getElementById('modal-overlay').classList.add('open');
+  ['product','receipt','delivery','transfer','adjustment'].forEach(m=>{document.getElementById('modal-'+m).style.display='none';});
+  document.getElementById('modal-'+type).style.display='block';
+  // Populate product dropdowns
+  const opts=state.products.map(p=>`<option>${p.name}</option>`).join('');
+  ['r-product','d-product','t-product','adj-product'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  if(type==='adjustment')fillOldQty();
+}
+
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function addProduct(){
+  const n=document.getElementById('p-name').value.trim();
+  const sku=document.getElementById('p-sku').value.trim();
+  if(!n||!sku){showAlert('Name and SKU are required','error');return;}
+  const newP={
+    id:state.products.length+1,
+    name:n,sku:sku,
+    cat:document.getElementById('p-cat').value,
+    unit:document.getElementById('p-unit').value,
+    stock:parseInt(document.getElementById('p-stock').value)||0,
+    min:parseInt(document.getElementById('p-min').value)||10,
+    loc:document.getElementById('p-loc').value
+  };
+  state.products.push(newP);
+  closeModal();
+  showAlert('Product "'+n+'" added!','success');
+  renderProducts();
+  refreshAll();
+}
+
+function saveOp(type,status){
+  const today=new Date().toISOString().split('T')[0];
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const timeStr=`Mar ${new Date().getDate()}, ${now}`;
+
+  if(type==='receipt'){
+    const sup=document.getElementById('r-supplier').value.trim();
+    const prod=document.getElementById('r-product').value;
+    const qty=parseInt(document.getElementById('r-qty').value);
+    if(!sup||!qty){showAlert('Fill all fields','error');return;}
+    const id='REC-00'+state.nextIds.rec++;
+    state.receipts.push({id,supplier:sup,product:prod,qty,status,date:today});
+    if(status==='Done'){
+      const p=state.products.find(x=>x.name===prod);
+      if(p){p.stock+=qty;state.ledger.push({type:'in',product:prod,qty,note:'Receipt from '+sup,time:timeStr});}
+      showAlert('Receipt validated! Stock +'+qty,'success');
+    } else showAlert('Receipt saved as draft','success');
+    closeModal();renderOps('receipts');
+  } else if(type==='delivery'){
+    const cust=document.getElementById('d-customer').value.trim();
+    const prod=document.getElementById('d-product').value;
+    const qty=parseInt(document.getElementById('d-qty').value);
+    if(!cust||!qty){showAlert('Fill all fields','error');return;}
+    if(status==='Done'){
+      const p=state.products.find(x=>x.name===prod);
+      if(p&&p.stock<qty){showAlert('Insufficient stock! Only '+p.stock+' available','error');return;}
+      if(p){p.stock-=qty;state.ledger.push({type:'out',product:prod,qty,note:'Delivery to '+cust,time:timeStr});}
+      showAlert('Delivery validated! Stock -'+qty,'success');
+    } else showAlert('Delivery saved as draft','success');
+    const id='DEL-00'+state.nextIds.del++;
+    state.deliveries.push({id,customer:cust,product:prod,qty,status,date:today});
+    closeModal();renderOps('deliveries');
+  } else if(type==='transfer'){
+    const prod=document.getElementById('t-product').value;
+    const qty=parseInt(document.getElementById('t-qty').value);
+    const from=document.getElementById('t-from').value;
+    const to=document.getElementById('t-to').value;
+    if(!qty){showAlert('Enter quantity','error');return;}
+    const id='TRF-00'+state.nextIds.trf++;
+    state.transfers.push({id,product:prod,qty,from,to,status,date:today});
+    if(status==='Done')state.ledger.push({type:'move',product:prod,qty,note:'Transfer: '+from+' → '+to,time:timeStr});
+    showAlert(status==='Done'?'Transfer completed!':'Transfer saved as draft','success');
+    closeModal();renderOps('transfers');
+  } else if(type==='adjustment'){
+    const prod=document.getElementById('adj-product').value;
+    const newQty=parseInt(document.getElementById('adj-new').value);
+    const reason=document.getElementById('adj-reason').value;
+    if(isNaN(newQty)){showAlert('Enter new quantity','error');return;}
+    const p=state.products.find(x=>x.name===prod);
+    const oldQty=p?p.stock:0;
+    const diff=newQty-oldQty;
+    const id='ADJ-00'+state.nextIds.adj++;
+    state.adjustments.push({id,product:prod,oldQty,newQty,diff,reason,date:today});
+    if(p)p.stock=newQty;
+    state.ledger.push({type:'adj',product:prod,qty:diff,note:'Adjustment: '+reason,time:timeStr});
+    showAlert('Stock adjusted by '+( diff>=0?'+':'')+diff,'success');
+    closeModal();renderOps('adjustments');
+  }
+  refreshAll();
+}
+
+function fillOldQty(){
+  const prod=document.getElementById('adj-product').value;
+  const p=state.products.find(x=>x.name===prod);
+  document.getElementById('adj-old').value=p?p.stock:0;
+  document.getElementById('adj-new').value='';
+  document.getElementById('adj-diff').value='';
+}
+
+function calcDiff(){
+  const oldQ=parseInt(document.getElementById('adj-old').value)||0;
+  const newQ=parseInt(document.getElementById('adj-new').value)||0;
+  const diff=newQ-oldQ;
+  const el=document.getElementById('adj-diff');
+  el.value=(diff>=0?'+':'')+diff;
+  el.style.color=diff>=0?'var(--green)':'var(--danger)';
+}
+
+// ── LEDGER ──
+function renderLedger(){
+  const icons={in:'📥',out:'📤',move:'🔄',adj:'⚙️'};
+  const sign={in:'+',out:'-',move:'↔',adj:'±'};
+  document.getElementById('full-ledger').innerHTML=[...state.ledger].reverse().map(l=>`
+    <div class="ledger-entry">
+      <div class="ledger-icon ${l.type}">${icons[l.type]}</div>
+      <div class="ledger-info"><div class="ledger-main">${l.product}</div><div class="ledger-time">${l.note} · ${l.time}</div></div>
+      <div class="ledger-qty ${l.qty>0?'pos':'neg'}">${sign[l.type]}${Math.abs(l.qty)}</div>
+    </div>`).join('');
+}
+
+// ── ALERT ──
+function showAlert(msg,type='success'){
+  const el=document.getElementById('alert');
+  el.textContent=msg;
+  el.className='alert-banner show '+type;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ── INIT ──
+refreshAll();
+</script>
+</body>
+</html>
